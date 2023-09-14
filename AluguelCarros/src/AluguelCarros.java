@@ -237,7 +237,6 @@ public class AluguelCarros {
             System.out.println("Tipo de veículo inválido.");
             System.out.println("Digite o tipo do veículo (PEQUENO, MEDIO, SUV):");
             tipo = scanner.nextLine().toUpperCase();
-
         }
 
         Veiculo veiculo = new Veiculo(placa, nome, tipo);
@@ -337,14 +336,22 @@ public class AluguelCarros {
         System.out.println("Digite o nome do cliente:");
         String nome = scanner.nextLine();
 
-        System.out.println("Digite o documento do cliente (CPF ou CNPJ):");
-        String documento = scanner.nextLine();
+
 
         // Verifica se o cliente já está cadastrado
-        for (Cliente clienteExistente : clientes) {
-            if (clienteExistente.getDocumento().equalsIgnoreCase(documento)) {
-                System.out.println("Cliente com este documento já está cadastrado.");
-                return;
+        boolean isClientUnique = false;
+        String documento = "any";
+        while(isClientUnique == false){
+            isClientUnique = true;
+            // é necessário colocar como true para ele só repetir se achaar um cliente com esse documento
+            System.out.println("Digite o documento do cliente (CPF ou CNPJ):");
+            documento = scanner.nextLine();
+
+            for (Cliente clienteExistente : clientes) {
+                if (clienteExistente.getDocumento().equalsIgnoreCase(documento)) {
+                    System.out.println("Cliente com este documento já está cadastrado.");
+                    isClientUnique = false;
+                }
             }
         }
 
@@ -361,21 +368,24 @@ public class AluguelCarros {
     public void alterarCliente() {
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("Digite o documento do cliente que deseja alterar:");
-        String documento = scanner.nextLine();
-
         // Encontra o cliente pelo documento
+        String documento = "any";
         Cliente clienteEncontrado = null;
-        for (Cliente cliente : clientes) {
-            if (cliente.getDocumento().equalsIgnoreCase(documento)) {
-                clienteEncontrado = cliente;
-                break;
-            }
-        }
 
-        if (clienteEncontrado == null) {
-            System.out.println("Cliente não encontrado.");
-            return;
+
+        while(clienteEncontrado == null){
+            System.out.println("Digite o documento do cliente que deseja alterar:");
+            documento = scanner.nextLine();
+            for (Cliente cliente : clientes) {
+                if (cliente.getDocumento().equalsIgnoreCase(documento)) {
+                    clienteEncontrado = cliente;
+                    break;
+                }
+            }
+            if (clienteEncontrado == null) {
+                System.out.println("Cliente não encontrado.");
+            }
+
         }
 
         System.out.println("Novo nome do cliente:");
@@ -431,10 +441,10 @@ public class AluguelCarros {
             return;
         }
 
-        System.out.println("Digite a data de início do aluguel (dd/mm/yyyy):");
+        System.out.println("Digite a data de início do aluguel dd/MM/yyyy HH:mm:");
         String dataAluguel = scanner.nextLine();
 
-        System.out.println("Digite a data de devolução do veículo (dd/mm/yyyy):");
+        System.out.println("Digite a data da estimativa de devolução do veículo (dd/MM/yyyy HH:mm):");
         String dataDevolucao = scanner.nextLine();
 
         // Crie um objeto Aluguel com as informações fornecidas
@@ -469,23 +479,22 @@ public class AluguelCarros {
             return;
         }
 
-        System.out.println("Digite o documento do cliente:");
-        String documento = scanner.nextLine();
-
-        // Encontra o cliente pelo documento
-        Cliente cliente = encontrarClientePorDocumento(documento);
-
-        if (cliente == null) {
-            System.out.println("cliente não encontrado.");
-            return;
+        Aluguel aluguelEncontrado = null;
+        for (Aluguel aluguel : alugueis) {
+            if (aluguel.getVeiculo().equals(veiculo)) {
+                aluguelEncontrado = aluguel;
+                break;
+            }
         }
+
 
         // Obtenha a data e hora atual
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
         Date dataAtual = new Date();
 
-        System.out.println("Data e hora do aluguel (dd/mm/yyyy HH:mm):");
-        String dataDevolucaoStr = scanner.nextLine();
+
+        String dataDevolucaoStr = aluguelEncontrado.getDataAluguel();
+        System.out.println("Data e hora do aluguel (dd/mm/yyyy HH:mm):" + aluguelEncontrado.getDataAluguel());
 
         try {
             Date dataDevolucao = sdf.parse(dataDevolucaoStr);
@@ -495,7 +504,7 @@ public class AluguelCarros {
             long horasDiferenca = diferencaMillis / (60 * 60 * 1000);
 
             // Calcule o valor a ser cobrado com base na diferença de horas
-            double valorTotal = calcularValorAluguel(veiculo.getTipo(), horasDiferenca, cliente.isPessoaJuridica() );
+            double valorTotal = calcularValorAluguel(veiculo.getTipo(), horasDiferenca, aluguelEncontrado.getCliente().isPessoaJuridica() );
 
             // Marque o veículo como disponível
             veiculo.setDisponivel(true);
